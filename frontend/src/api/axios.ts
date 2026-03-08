@@ -23,7 +23,8 @@ api.interceptors.response.use(
                 const { accessToken } = response.data;
                 api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
                 originalRequest.headers['Authorization'] = `Bearer ${accessToken}`;
-                return api(originalRequest);
+
+                return axios(originalRequest);
             } catch (err) {
                 localStorage.removeItem('user');
                 localStorage.removeItem('token');

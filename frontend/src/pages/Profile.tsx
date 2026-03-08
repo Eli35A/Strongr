@@ -13,16 +13,29 @@ import {
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/axios';
 import EditProfileDialog from '../components/EditProfileDialog';
+import PostCard from '../components/PostCard';
 
 const Profile: React.FC = () => {
     const auth = useContext(AuthContext);
     const [profile, setProfile] = useState<any>(null);
+    const [posts, setPosts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [editOpen, setEditOpen] = useState(false);
 
     useEffect(() => {
         fetchProfile();
-    }, []);
+        fetchUserPosts();
+    }, [auth?.user?._id]);
+
+    const fetchUserPosts = async () => {
+        if (!auth?.user?._id) return;
+        try {
+            const { data } = await api.get(`/posts/user/${auth.user._id}`);
+            setPosts(data);
+        } catch (error) {
+            console.error('Failed to fetch user posts', error);
+        }
+    };
 
     const fetchProfile = async () => {
         try {
@@ -40,6 +53,10 @@ const Profile: React.FC = () => {
         if (auth?.updateUser) {
             auth.updateUser(updatedUser);
         }
+    };
+
+    const handlePostUpdated = (updatedPost: any) => {
+        setPosts(posts.map(post => post._id === updatedPost._id ? updatedPost : post));
     };
 
     if (loading) {
@@ -89,12 +106,23 @@ const Profile: React.FC = () => {
                     My Posts
                 </Typography>
 
-                {/* Future Integration Point for actual user posts */}
-                <Box sx={{ p: 4, textAlign: 'center', backgroundColor: 'background.default', borderRadius: 2 }}>
-                    <Typography color="text.secondary">
-                        You haven't made any posts yet!
-                    </Typography>
-                </Box>
+                {posts.length === 0 ? (
+                    <Box sx={{ p: 4, textAlign: 'center', backgroundColor: 'background.default', borderRadius: 2 }}>
+                        <Typography color="text.secondary">
+                            You haven't made any posts yet!
+                        </Typography>
+                    </Box>
+                ) : (
+                    <Box display="flex" flexDirection="column" gap={0}>
+                        {posts.map(post => (
+                            <PostCard
+                                key={post._id}
+                                post={post}
+                                onPostUpdated={handlePostUpdated}
+                            />
+                        ))}
+                    </Box>
+                )}
             </Paper>
 
             <EditProfileDialog

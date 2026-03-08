@@ -6,6 +6,7 @@ import connectDB from './config/db';
 import path from 'path';
 import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
+import postRoutes from './routes/postRoutes';
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 app.use('/auth', authRoutes);
 app.use('/users', userRoutes);
+app.use('/posts', postRoutes);
 
 app.get('/', (req, res) => {
     res.send('Strongr API is running...');

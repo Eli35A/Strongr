@@ -1,6 +1,6 @@
 import { useContext } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { Box, Button, Typography, Container, CircularProgress, AppBar, Toolbar, Avatar, IconButton } from '@mui/material';
+import { Box, Button, Typography, CircularProgress, AppBar, Toolbar, Avatar, IconButton } from '@mui/material';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
@@ -16,24 +16,7 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
     return auth?.user ? children : <Navigate to="/login" replace />;
 };
 
-const Dashboard = () => {
-    const auth = useContext(AuthContext);
-    return (
-        <Container maxWidth="sm">
-            <Box sx={{ mt: 8, textAlign: 'center' }}>
-                <Typography variant="h3" component="h1" gutterBottom sx={{ fontWeight: 700 }}>
-                    Welcome, {auth?.user?.username}!
-                </Typography>
-                <Typography variant="body1" sx={{ mb: 4, color: 'text.secondary' }}>
-                    You have successfully logged in. Enjoy your stay.
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                    Use the navigation bar above to view and edit your profile.
-                </Typography>
-            </Box>
-        </Container>
-    );
-};
+import Feed from './pages/Feed';
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
     const auth = useContext(AuthContext);
@@ -80,7 +63,7 @@ function App() {
             <Route path="/" element={
                 <ProtectedRoute>
                     <MainLayout>
-                        <Dashboard />
+                        <Feed />
                     </MainLayout>
                 </ProtectedRoute>
             } />
