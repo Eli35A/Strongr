@@ -13,6 +13,7 @@ interface AuthContextType {
     token: string | null;
     login: (userData: User, token: string) => void;
     logout: () => void;
+    updateUser: (userData: User) => void;
     loading: boolean;
 }
 
@@ -55,8 +56,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         delete api.defaults.headers.common['Authorization'];
     };
 
+    const updateUser = (userData: User) => {
+        setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
+    };
+
     return (
-        <AuthContext.Provider value={{ user, token, login, logout, loading }}>
+        <AuthContext.Provider value={{ user, token, login, logout, updateUser, loading }}>
             {children}
         </AuthContext.Provider>
     );
