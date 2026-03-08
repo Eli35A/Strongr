@@ -20,7 +20,8 @@ export const createPost = async (req: AuthRequest, res: Response) => {
         const savedPost = await newPost.save();
         await savedPost.populate('author', 'username profileImage');
 
-        res.status(201).json(savedPost);
+        const postObj = savedPost.toObject();
+        res.status(201).json({ ...postObj, commentCount: 0 });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error creating post' });
@@ -29,11 +30,30 @@ export const createPost = async (req: AuthRequest, res: Response) => {
 
 export const getPosts = async (req: AuthRequest, res: Response) => {
     try {
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
+        const skip = (page - 1) * limit;
+
+        const totalPosts = await Post.countDocuments();
+
         const posts = await Post.find()
             .populate('author', 'username profileImage')
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .lean();
 
-        res.json(posts);
+        const postsWithCounts = await Promise.all(
+            posts.map(async (post) => {
+                const commentCount = await Comment.countDocuments({ post: post._id });
+                return { ...post, commentCount };
+            })
+        );
+
+        res.json({
+            posts: postsWithCounts,
+            hasMore: totalPosts > skip + posts.length
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error fetching posts' });
@@ -42,11 +62,30 @@ export const getPosts = async (req: AuthRequest, res: Response) => {
 
 export const getUserPosts = async (req: AuthRequest, res: Response) => {
     try {
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
+        const skip = (page - 1) * limit;
+
+        const totalPosts = await Post.countDocuments({ author: req.params.userId });
+
         const posts = await Post.find({ author: req.params.userId })
             .populate('author', 'username profileImage')
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .lean();
 
-        res.json(posts);
+        const postsWithCounts = await Promise.all(
+            posts.map(async (post) => {
+                const commentCount = await Comment.countDocuments({ post: post._id });
+                return { ...post, commentCount };
+            })
+        );
+
+        res.json({
+            posts: postsWithCounts,
+            hasMore: totalPosts > skip + posts.length
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error fetching user posts' });

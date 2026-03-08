@@ -25,6 +25,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onPostUpdated, onPostDeleted 
     const [submittingComment, setSubmittingComment] = useState(false);
     const [editOpen, setEditOpen] = useState(false);
     const [deleteOpen, setDeleteOpen] = useState(false);
+    const [commentCount, setCommentCount] = useState<number>(post.commentCount || 0);
 
     const isLikedByMe = auth?.user?._id ? likes.includes(auth.user._id) : false;
     const isMyPost = auth?.user?._id === post.author?._id;
@@ -87,6 +88,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onPostUpdated, onPostDeleted 
         try {
             const { data } = await api.post(`/posts/${post._id}/comments`, { content: newComment });
             setComments([...comments, data]);
+            setCommentCount(prev => prev + 1);
             setNewComment('');
         } catch (error) {
             console.error('Failed to submit comment', error);
@@ -147,8 +149,8 @@ const PostCard: React.FC<PostCardProps> = ({ post, onPostUpdated, onPostDeleted 
                     <IconButton onClick={handleToggleComments}>
                         <ChatBubbleOutlineIcon />
                     </IconButton>
-                    <Typography variant="body2" color="text.secondary" sx={{ cursor: 'pointer' }} onClick={handleToggleComments}>
-                        Comment
+                    <Typography variant="body2" color="text.secondary" sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }} onClick={handleToggleComments}>
+                        {commentCount > 0 ? `View all ${commentCount} comments` : 'Be the first to comment'}
                     </Typography>
                 </Box>
             </CardActions>

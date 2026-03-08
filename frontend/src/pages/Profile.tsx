@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import {
     Container,
     Box,
@@ -21,19 +21,51 @@ const Profile: React.FC = () => {
     const [posts, setPosts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [editOpen, setEditOpen] = useState(false);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+
+    const observer = useRef<IntersectionObserver | null>(null);
+    const lastPostElementRef = useCallback((node: HTMLDivElement | null) => {
+        if (loadingMore) return;
+        if (observer.current) observer.current.disconnect();
+        observer.current = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && hasMore) {
+                setPage(prev => prev + 1);
+            }
+        });
+        if (node) observer.current.observe(node);
+    }, [loadingMore, hasMore]);
 
     useEffect(() => {
         fetchProfile();
-        fetchUserPosts();
-    }, [auth?.user?._id]);
+    }, []);
 
-    const fetchUserPosts = async () => {
+    useEffect(() => {
+        if (auth?.user?._id) {
+            fetchUserPosts(page);
+        }
+    }, [auth?.user?._id, page]);
+
+    const fetchUserPosts = async (currentPage: number) => {
         if (!auth?.user?._id) return;
+
+        if (currentPage === 1 && posts.length === 0) setLoading(true);
+        else setLoadingMore(true);
+
         try {
-            const { data } = await api.get(`/posts/user/${auth.user._id}`);
-            setPosts(data);
+            const { data } = await api.get(`/posts/user/${auth.user._id}?page=${currentPage}&limit=10`);
+            if (currentPage === 1) {
+                setPosts(data.posts);
+            } else {
+                setPosts(prev => [...prev, ...data.posts]);
+            }
+            setHasMore(data.hasMore);
         } catch (error) {
             console.error('Failed to fetch user posts', error);
+        } finally {
+            setLoading(false);
+            setLoadingMore(false);
         }
     };
 
@@ -126,6 +158,10 @@ const Profile: React.FC = () => {
                                 onPostDeleted={handlePostDeleted}
                             />
                         ))}
+
+                        <Box ref={lastPostElementRef} display="flex" justifyContent="center" mt={3} mb={4} height={40}>
+                            {loadingMore && <CircularProgress size={24} />}
+                        </Box>
                     </Box>
                 )}
             </Paper>
