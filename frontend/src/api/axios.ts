@@ -19,14 +19,10 @@ api.interceptors.response.use(
         if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true;
             try {
-                const response = await axios.post('http://localhost:5000/auth/refresh', {}, { withCredentials: true });
-                const { accessToken } = response.data;
-                api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
-                originalRequest.headers['Authorization'] = `Bearer ${accessToken}`;
+                await api.post('/auth/refresh');
                 return api(originalRequest);
             } catch (err) {
                 localStorage.removeItem('user');
-                localStorage.removeItem('token');
                 window.location.href = '/login';
                 return Promise.reject(err);
             }
