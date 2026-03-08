@@ -84,6 +84,28 @@ export const updatePost = async (req: AuthRequest, res: Response) => {
     }
 };
 
+export const deletePost = async (req: AuthRequest, res: Response) => {
+    try {
+        const post = await Post.findById(req.params.id);
+
+        if (!post) {
+            return res.status(404).json({ message: 'Post not found' });
+        }
+
+        if (post.author.toString() !== req.user?._id.toString()) {
+            return res.status(403).json({ message: 'User not authorized to delete this post' });
+        }
+
+        await Comment.deleteMany({ post: post._id });
+        await post.deleteOne();
+
+        res.json({ message: 'Post removed successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error deleting post' });
+    }
+};
+
 export const toggleLikePost = async (req: AuthRequest, res: Response) => {
     try {
         const post = await Post.findById(req.params.id);

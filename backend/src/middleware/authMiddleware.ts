@@ -7,12 +7,10 @@ export interface AuthRequest extends Request {
 }
 
 export const protect = async (req: AuthRequest, res: Response, next: NextFunction) => {
-    let token;
+    let token = req.cookies.accessToken;
 
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    if (token) {
         try {
-            token = req.headers.authorization.split(' ')[1];
-
             const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret') as { userId: string };
 
             req.user = await User.findById(decoded.userId).select('-password');
@@ -23,7 +21,7 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
             if (error.name === 'TokenExpiredError') {
                 return res.status(401).json({ message: 'Token expired' });
             }
-            res.status(401).json({ message: 'Not authorized, token failed' });
+            return res.status(401).json({ message: 'Not authorized, token failed' });
         }
     }
 

@@ -31,6 +31,10 @@ const Feed: React.FC = () => {
         setPosts(posts.map(post => post._id === updatedPost._id ? updatedPost : post));
     };
 
+    const handlePostDeleted = (deletedPostId: string) => {
+        setPosts(posts.filter(post => post._id !== deletedPostId));
+    };
+
     return (
         <Container maxWidth="sm">
             <Box sx={{ mt: 2, mb: 4 }}>
@@ -51,6 +55,7 @@ const Feed: React.FC = () => {
                                 key={post._id}
                                 post={post}
                                 onPostUpdated={handlePostUpdated}
+                                onPostDeleted={handlePostDeleted}
                             />
                         ))}
                     </Box>

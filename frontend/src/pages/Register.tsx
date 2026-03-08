@@ -34,7 +34,7 @@ const Register: React.FC = () => {
             const response = await api.post('/auth/register', { username, email, password });
             if (auth) {
                 const { accessToken, ...userData } = response.data;
-                auth.login(userData, accessToken);
+                auth.login(userData);
                 navigate('/');
             }
         } catch (err: any) {
@@ -53,7 +53,7 @@ const Register: React.FC = () => {
             });
             if (auth) {
                 const { accessToken, ...userData } = response.data;
-                auth.login(userData, accessToken);
+                auth.login(userData);
                 navigate('/');
             }
         } catch (err: any) {

@@ -6,7 +6,8 @@ import {
     toggleLikePost,
     addComment,
     getPostComments,
-    updatePost
+    updatePost,
+    deletePost
 } from '../controllers/postController';
 import { protect } from '../middleware/authMiddleware';
 import multer from 'multer';
@@ -43,7 +44,9 @@ router.route('/')
     .get(protect, getPosts)
     .post(protect, upload.single('image'), createPost);
 
-router.put('/:id', protect, upload.single('image'), updatePost);
+router.route('/:id')
+    .put(protect, upload.single('image'), updatePost)
+    .delete(protect, deletePost);
 
 router.get('/user/:userId', protect, getUserPosts);
 

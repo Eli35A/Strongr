@@ -59,6 +59,10 @@ const Profile: React.FC = () => {
         setPosts(posts.map(post => post._id === updatedPost._id ? updatedPost : post));
     };
 
+    const handlePostDeleted = (deletedPostId: string) => {
+        setPosts(posts.filter(post => post._id !== deletedPostId));
+    };
+
     if (loading) {
         return (
             <Box display="flex" justifyContent="center" alignItems="center" minHeight="vh">
@@ -119,6 +123,7 @@ const Profile: React.FC = () => {
                                 key={post._id}
                                 post={post}
                                 onPostUpdated={handlePostUpdated}
+                                onPostDeleted={handlePostDeleted}
                             />
                         ))}
                     </Box>

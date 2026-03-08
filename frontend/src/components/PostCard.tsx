@@ -7,13 +7,15 @@ import { AuthContext } from '../context/AuthContext';
 import api from '../api/axios';
 import EditPostDialog from './EditPostDialog';
 import EditIcon from '@mui/icons-material/Edit';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 
 interface PostCardProps {
     post: any;
     onPostUpdated?: (updatedPost: any) => void;
+    onPostDeleted?: (postId: string) => void;
 }
 
-const PostCard: React.FC<PostCardProps> = ({ post, onPostUpdated }) => {
+const PostCard: React.FC<PostCardProps> = ({ post, onPostUpdated, onPostDeleted }) => {
     const auth = useContext(AuthContext);
     const [likes, setLikes] = useState<string[]>(post.likes || []);
     const [showComments, setShowComments] = useState(false);
@@ -22,6 +24,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onPostUpdated }) => {
     const [loadingComments, setLoadingComments] = useState(false);
     const [submittingComment, setSubmittingComment] = useState(false);
     const [editOpen, setEditOpen] = useState(false);
+    const [deleteOpen, setDeleteOpen] = useState(false);
 
     const isLikedByMe = auth?.user?._id ? likes.includes(auth.user._id) : false;
     const isMyPost = auth?.user?._id === post.author?._id;
@@ -42,6 +45,19 @@ const PostCard: React.FC<PostCardProps> = ({ post, onPostUpdated }) => {
             }
         } catch (error) {
             console.error('Failed to toggle like', error);
+        }
+    };
+
+    const handleDeletePost = async () => {
+        try {
+            await api.delete(`/posts/${post._id}`);
+            if (onPostDeleted) {
+                onPostDeleted(post._id);
+            }
+            setDeleteOpen(false);
+        } catch (error) {
+            console.error('Failed to delete post', error);
+            alert('Failed to delete post.');
         }
     };
 
@@ -90,9 +106,14 @@ const PostCard: React.FC<PostCardProps> = ({ post, onPostUpdated }) => {
                 avatar={<Avatar src={getAvatarUrl(post.author)} alt={post.author?.username} />}
                 action={
                     isMyPost && (
-                        <IconButton onClick={() => setEditOpen(true)} size="small" sx={{ mt: 1, mr: 1 }}>
-                            <EditIcon fontSize="small" />
-                        </IconButton>
+                        <Box display="flex">
+                            <IconButton onClick={() => setEditOpen(true)} size="small" sx={{ mt: 1 }}>
+                                <EditIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton onClick={() => setDeleteOpen(true)} size="small" sx={{ mt: 1, mr: 1, color: 'error.main' }}>
+                                <DeleteOutlineIcon fontSize="small" />
+                            </IconButton>
+                        </Box>
                     )
                 }
                 title={<Typography variant="subtitle1" fontWeight="bold">{post.author?.username}</Typography>}
@@ -192,6 +213,20 @@ const PostCard: React.FC<PostCardProps> = ({ post, onPostUpdated }) => {
                     if (onPostUpdated) onPostUpdated(updatedPost);
                 }}
             />
+
+            {/* Delete Confirmation Dialog */}
+            {deleteOpen && (
+                <Box position="fixed" top={0} left={0} right={0} bottom={0} bgcolor="rgba(0,0,0,0.5)" display="flex" alignItems="center" justifyContent="center" zIndex={1300}>
+                    <Card sx={{ p: 3, maxWidth: 400, width: '90%' }}>
+                        <Typography variant="h6" mb={2}>Delete Post?</Typography>
+                        <Typography variant="body2" color="text.secondary" mb={3}>Are you sure you want to delete this post? This action cannot be undone.</Typography>
+                        <Box display="flex" justifyContent="flex-end" gap={1}>
+                            <Button onClick={() => setDeleteOpen(false)}>Cancel</Button>
+                            <Button variant="contained" color="error" onClick={handleDeletePost}>Delete</Button>
+                        </Box>
+                    </Card>
+                </Box>
+            )}
         </Card>
     );
 };

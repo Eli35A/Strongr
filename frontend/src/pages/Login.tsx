@@ -33,7 +33,7 @@ const Login: React.FC = () => {
             const response = await api.post('/auth/login', { email, password });
             if (auth) {
                 const { accessToken, ...userData } = response.data;
-                auth.login(userData, accessToken);
+                auth.login(userData);
                 navigate('/');
             }
         } catch (err: any) {
@@ -52,7 +52,7 @@ const Login: React.FC = () => {
             });
             if (auth) {
                 const { accessToken, ...userData } = response.data;
-                auth.login(userData, accessToken);
+                auth.login(userData);
                 navigate('/');
             }
         } catch (err: any) {

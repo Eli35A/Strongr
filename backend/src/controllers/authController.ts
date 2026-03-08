@@ -26,13 +26,12 @@ export const registerUser = async (req: Request, res: Response) => {
         });
 
         if (user) {
-            const accessToken = generateTokens(res, user._id as unknown as string);
+            generateTokens(res, user._id as unknown as string);
             res.status(201).json({
                 _id: user._id,
                 username: user.username,
                 email: user.email,
-                profileImage: user.profileImage,
-                accessToken
+                profileImage: user.profileImage
             });
         } else {
             res.status(400).json({ message: 'Invalid user data' });
@@ -48,13 +47,12 @@ export const loginUser = async (req: Request, res: Response) => {
         const user = await User.findOne({ email });
 
         if (user && user.password && (await bcrypt.compare(password, user.password))) {
-            const accessToken = generateTokens(res, user._id as unknown as string);
+            generateTokens(res, user._id as unknown as string);
             res.json({
                 _id: user._id,
                 username: user.username,
                 email: user.email,
-                profileImage: user.profileImage,
-                accessToken
+                profileImage: user.profileImage
             });
         } else {
             res.status(401).json({ message: 'Invalid email or password' });
@@ -65,6 +63,10 @@ export const loginUser = async (req: Request, res: Response) => {
 };
 
 export const logoutUser = (req: Request, res: Response) => {
+    res.cookie('accessToken', '', {
+        httpOnly: true,
+        expires: new Date(0)
+    });
     res.cookie('refreshToken', '', {
         httpOnly: true,
         expires: new Date(0)
@@ -84,7 +86,15 @@ export const refreshToken = (req: Request, res: Response) => {
         const accessToken = jwt.sign({ userId: decoded.userId }, process.env.JWT_SECRET || 'fallback_secret', {
             expiresIn: '15m'
         });
-        res.json({ accessToken });
+
+        res.cookie('accessToken', accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+            maxAge: 15 * 60 * 1000
+        });
+
+        res.json({ success: true });
     } catch (error) {
         res.status(401).json({ message: 'Not authorized, invalid refresh token' });
     }
@@ -123,14 +133,13 @@ export const googleLogin = async (req: Request, res: Response) => {
             await user.save();
         }
 
-        const accessToken = generateTokens(res, user._id as unknown as string);
+        generateTokens(res, user._id as unknown as string);
 
         res.json({
             _id: user._id,
             username: user.username,
             email: user.email,
-            profileImage: user.profileImage,
-            accessToken
+            profileImage: user.profileImage
         });
     } catch (error) {
         console.error('Google Auth Error:', error);
