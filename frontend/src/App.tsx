@@ -17,6 +17,7 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
 };
 
 import Feed from './pages/Feed';
+import Search from './pages/Search';
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
     const auth = useContext(AuthContext);
@@ -71,6 +72,13 @@ function App() {
                 <ProtectedRoute>
                     <MainLayout>
                         <Profile />
+                    </MainLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/search" element={
+                <ProtectedRoute>
+                    <MainLayout>
+                        <Search />
                     </MainLayout>
                 </ProtectedRoute>
             } />

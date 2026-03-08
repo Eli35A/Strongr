@@ -1,15 +1,20 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Container, Box, Typography, CircularProgress } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { Container, Box, Typography, CircularProgress, TextField, InputAdornment, IconButton } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
 import CreatePostWidget from '../components/CreatePostWidget';
 import PostCard from '../components/PostCard';
 import api from '../api/axios';
 
 const Feed: React.FC = () => {
+    const navigate = useNavigate();
     const [posts, setPosts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
+    const [searchInput, setSearchInput] = useState('');
 
     const observer = useRef<IntersectionObserver | null>(null);
     const lastPostElementRef = useCallback((node: HTMLDivElement | null) => {
@@ -47,6 +52,17 @@ const Feed: React.FC = () => {
         fetchPosts(page);
     }, [page]);
 
+    const handleSearchSubmit = (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        if (searchInput.trim()) {
+            navigate(`/search?q=${encodeURIComponent(searchInput)}`);
+        }
+    };
+
+    const handleClearSearch = () => {
+        setSearchInput('');
+    };
+
     const handlePostCreated = (newPost: any) => {
         setPosts([newPost, ...posts]);
     };
@@ -62,6 +78,31 @@ const Feed: React.FC = () => {
     return (
         <Container maxWidth="sm">
             <Box sx={{ mt: 2, mb: 4 }}>
+                <Box component="form" onSubmit={handleSearchSubmit} sx={{ mb: 3 }}>
+                    <TextField
+                        fullWidth
+                        placeholder="Search posts..."
+                        variant="outlined"
+                        value={searchInput}
+                        onChange={(e) => setSearchInput(e.target.value)}
+                        InputProps={{
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <SearchIcon color="action" />
+                                </InputAdornment>
+                            ),
+                            endAdornment: searchInput ? (
+                                <InputAdornment position="end">
+                                    <IconButton onClick={handleClearSearch} edge="end" size="small">
+                                        <ClearIcon fontSize="small" />
+                                    </IconButton>
+                                </InputAdornment>
+                            ) : null,
+                            sx: { borderRadius: 4, bgcolor: 'background.paper' }
+                        }}
+                    />
+                </Box>
+
                 <CreatePostWidget onPostCreated={handlePostCreated} />
 
                 {loading ? (
