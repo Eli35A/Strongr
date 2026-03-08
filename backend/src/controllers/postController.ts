@@ -2,6 +2,7 @@ import { Response } from 'express';
 import Post from '../models/Post';
 import Comment from '../models/Comment';
 import { AuthRequest } from '../middleware/authMiddleware';
+import ai from '../utils/gemini';
 
 export const createPost = async (req: AuthRequest, res: Response) => {
     try {
@@ -209,5 +210,64 @@ export const getPostComments = async (req: AuthRequest, res: Response) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error fetching comments' });
+    }
+};
+
+export const searchPosts = async (req: AuthRequest, res: Response) => {
+    try {
+        const query = req.query.q as string;
+        if (!query) {
+            return res.status(400).json({ message: 'Search query is required' });
+        }
+
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
+        const skip = (page - 1) * limit;
+
+        let searchKeywords = [query];
+        try {
+            const prompt = `You are a fitness app search assistant. Expand the following search query into a list of 5-10 related keywords, synonyms, and root words to improve search results. CRITICAL INSTRUCTIONS: 1. If the query is COMPLETELY UNRELATED to fitness, health, or gym (e.g. "mona lisa", "cars", "politics"), DO NOT expand it. Simply return the original query exactly as is. 2. Use BASE/ROOT words (e.g., 'leg', 'squat') to maximize substring regex matching. 3. Return ONLY a comma-separated list of words, no other text or explanation. Query: "${query}"`;
+            const geminiRes = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+            });
+            const text = geminiRes.text;
+            if (text) {
+                const expanded = text.split(',').map(s => s.trim().toLowerCase()).filter(s => s.length > 0);
+                searchKeywords = [...new Set([...searchKeywords, ...expanded])];
+            }
+        } catch (geminiError) {
+            console.error('Gemini expansion failed, falling back to basic search:', geminiError);
+        }
+
+        const regexQueries = searchKeywords.map(keyword => ({
+            content: { $regex: keyword, $options: 'i' }
+        }));
+
+        const totalPosts = await Post.countDocuments({ $or: regexQueries });
+
+        const posts = await Post.find({ $or: regexQueries })
+            .populate('author', 'username profileImage')
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .lean();
+
+        const postsWithCounts = await Promise.all(
+            posts.map(async (post) => {
+                const commentCount = await Comment.countDocuments({ post: post._id });
+                return { ...post, commentCount };
+            })
+        );
+
+        res.json({
+            posts: postsWithCounts,
+            hasMore: totalPosts > skip + posts.length,
+            keywordsUsed: searchKeywords
+        });
+
+    } catch (error) {
+        console.error('Server error during search:', error);
+        res.status(500).json({ message: 'Server error parsing search request' });
     }
 };

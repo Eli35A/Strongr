@@ -7,7 +7,8 @@ import {
     addComment,
     getPostComments,
     updatePost,
-    deletePost
+    deletePost,
+    searchPosts
 } from '../controllers/postController';
 import { protect } from '../middleware/authMiddleware';
 import multer from 'multer';
@@ -43,6 +44,8 @@ const upload = multer({
 router.route('/')
     .get(protect, getPosts)
     .post(protect, upload.single('image'), createPost);
+
+router.get('/search', protect, searchPosts);
 
 router.route('/:id')
     .put(protect, upload.single('image'), updatePost)
