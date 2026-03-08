@@ -10,8 +10,10 @@ import {
     Box,
     Alert,
     Link,
-    CircularProgress
+    CircularProgress,
+    Divider
 } from '@mui/material';
+import { GoogleLogin } from '@react-oauth/google';
 import api from '../api/axios';
 import { AuthContext } from '../context/AuthContext';
 
@@ -41,6 +43,25 @@ const Login: React.FC = () => {
         }
     };
 
+    const handleGoogleSuccess = async (credentialResponse: any) => {
+        setError('');
+        setIsLoading(true);
+        try {
+            const response = await api.post('/auth/google', {
+                credential: credentialResponse.credential
+            });
+            if (auth) {
+                const { accessToken, ...userData } = response.data;
+                auth.login(userData, accessToken);
+                navigate('/');
+            }
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'Google Login failed');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return (
         <Container maxWidth="xs" sx={{ display: 'flex', minHeight: '100vh', alignItems: 'center' }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
@@ -54,6 +75,15 @@ const Login: React.FC = () => {
                         </Typography>
 
                         {error && <Alert severity="error">{error}</Alert>}
+
+                        <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+                            <GoogleLogin
+                                onSuccess={handleGoogleSuccess}
+                                onError={() => setError('Google Login Failed')}
+                            />
+                        </Box>
+
+                        <Divider sx={{ my: 1 }}>or</Divider>
 
                         <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                             <TextField

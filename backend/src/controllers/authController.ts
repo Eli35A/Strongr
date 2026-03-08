@@ -3,6 +3,9 @@ import User from '../models/User';
 import bcrypt from 'bcryptjs';
 import { generateTokens } from '../utils/generateToken';
 import jwt from 'jsonwebtoken';
+import { OAuth2Client } from 'google-auth-library';
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export const registerUser = async (req: Request, res: Response) => {
     try {
@@ -84,5 +87,53 @@ export const refreshToken = (req: Request, res: Response) => {
         res.json({ accessToken });
     } catch (error) {
         res.status(401).json({ message: 'Not authorized, invalid refresh token' });
+    }
+};
+
+export const googleLogin = async (req: Request, res: Response) => {
+    try {
+        const { credential } = req.body;
+
+        const ticket = await client.verifyIdToken({
+            idToken: credential,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+
+        const payload = ticket.getPayload();
+        if (!payload) {
+            return res.status(400).json({ message: 'Invalid Google token payload' });
+        }
+
+        const { sub: googleId, email, name: username, picture: profileImage } = payload;
+
+        let user = await User.findOne({ email });
+
+        if (!user) {
+            user = await User.create({
+                username: username || email?.split('@')[0],
+                email,
+                googleId,
+                profileImage
+            });
+        } else if (!user.googleId) {
+            user.googleId = googleId;
+            if (!user.profileImage || user.profileImage === 'default-profile.png') {
+                user.profileImage = profileImage;
+            }
+            await user.save();
+        }
+
+        const accessToken = generateTokens(res, user._id as unknown as string);
+
+        res.json({
+            _id: user._id,
+            username: user.username,
+            email: user.email,
+            profileImage: user.profileImage,
+            accessToken
+        });
+    } catch (error) {
+        console.error('Google Auth Error:', error);
+        res.status(500).json({ message: 'Google authentication failed' });
     }
 };
