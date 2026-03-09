@@ -5,13 +5,15 @@ export interface Post extends Document {
     content: string;
     image?: string;
     likes: Types.ObjectId[];
+    embedding?: number[];
 }
 
 const PostSchema: Schema = new Schema({
     author: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     content: { type: String, required: true },
     image: { type: String },
-    likes: [{ type: Schema.Types.ObjectId, ref: 'User' }]
+    likes: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+    embedding: { type: [Number], select: false }
 }, {
     timestamps: true
 });

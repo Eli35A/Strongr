@@ -6,7 +6,6 @@ export interface User extends Document {
     password?: string;
     profileImage?: string;
     googleId?: string;
-    facebookId?: string;
 }
 
 const UserSchema: Schema = new Schema({
@@ -14,8 +13,7 @@ const UserSchema: Schema = new Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String },
     profileImage: { type: String, default: 'default-profile.png' },
-    googleId: { type: String },
-    facebookId: { type: String }
+    googleId: { type: String }
 }, {
     timestamps: true
 });
