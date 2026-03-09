@@ -73,14 +73,12 @@ const Search: React.FC = () => {
         }
     };
 
-    // Reset pagination and fetch fresh data whenever the URL query parameter changes
     useEffect(() => {
         setPage(1);
         setSearchInput(query);
         fetchPosts(1, query);
     }, [query]);
 
-    // Handle Infinite scroll fetching subsequent pages using the existing query
     useEffect(() => {
         if (page > 1) {
             fetchPosts(page, query);

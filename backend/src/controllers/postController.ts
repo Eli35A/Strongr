@@ -2,7 +2,7 @@ import { Response } from 'express';
 import Post from '../models/Post';
 import Comment from '../models/Comment';
 import { AuthRequest } from '../middleware/authMiddleware';
-import ai from '../utils/gemini';
+import { generateEmbedding, cosineSimilarity, SEARCH_THRESHOLD } from '../utils/aiService';
 
 export const createPost = async (req: AuthRequest, res: Response) => {
     try {
@@ -12,10 +12,13 @@ export const createPost = async (req: AuthRequest, res: Response) => {
             return res.status(400).json({ message: 'Content is required' });
         }
 
+        const embedding = await generateEmbedding(content);
+
         const newPost = new Post({
             author: req.user?._id,
             content,
-            image: req.file ? `/uploads/${req.file.filename}` : undefined
+            image: req.file ? `/uploads/${req.file.filename}` : undefined,
+            embedding
         });
 
         const savedPost = await newPost.save();
@@ -108,6 +111,7 @@ export const updatePost = async (req: AuthRequest, res: Response) => {
         const { content } = req.body;
         if (content) {
             post.content = content;
+            post.embedding = await generateEmbedding(content);
         }
 
         if (req.file) {
@@ -224,37 +228,33 @@ export const searchPosts = async (req: AuthRequest, res: Response) => {
         const limit = parseInt(req.query.limit as string) || 10;
         const skip = (page - 1) * limit;
 
-        let searchKeywords = [query];
-        try {
-            const prompt = `You are a fitness app search assistant. Expand the following search query into a list of 5-10 related keywords, synonyms, and root words to improve search results. CRITICAL INSTRUCTIONS: 1. If the query is COMPLETELY UNRELATED to fitness, health, or gym (e.g. "mona lisa", "cars", "politics"), DO NOT expand it. Simply return the original query exactly as is. 2. Use BASE/ROOT words (e.g., 'leg', 'squat') to maximize substring regex matching. 3. Return ONLY a comma-separated list of words, no other text or explanation. Query: "${query}"`;
-            const geminiRes = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: prompt,
-            });
-            const text = geminiRes.text;
-            if (text) {
-                const expanded = text.split(',').map(s => s.trim().toLowerCase()).filter(s => s.length > 0);
-                searchKeywords = [...new Set([...searchKeywords, ...expanded])];
-            }
-        } catch (geminiError) {
-            console.error('Gemini expansion failed, falling back to basic search:', geminiError);
-        }
+        const queryEmbedding = await generateEmbedding(query);
 
-        const regexQueries = searchKeywords.map(keyword => ({
-            content: { $regex: keyword, $options: 'i' }
-        }));
-
-        const totalPosts = await Post.countDocuments({ $or: regexQueries });
-
-        const posts = await Post.find({ $or: regexQueries })
+        const allPosts = await Post.find()
+            .select('+embedding')
             .populate('author', 'username profileImage')
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit)
-            .lean();
+            .lean() as any[];
+
+        let scoredPosts = allPosts.map(post => {
+            const similarity = (post.embedding && post.embedding.length > 0)
+                ? cosineSimilarity(queryEmbedding, post.embedding)
+                : 0;
+            return { ...post, similarity };
+        });
+
+        scoredPosts = scoredPosts.filter(post => post.similarity > SEARCH_THRESHOLD);
+        scoredPosts.sort((a, b) => b.similarity - a.similarity);
+
+        scoredPosts.forEach(post => {
+            delete post.embedding;
+            delete post.similarity;
+        });
+
+        const totalPosts = scoredPosts.length;
+        const pagedPosts = scoredPosts.slice(skip, skip + limit);
 
         const postsWithCounts = await Promise.all(
-            posts.map(async (post) => {
+            pagedPosts.map(async (post) => {
                 const commentCount = await Comment.countDocuments({ post: post._id });
                 return { ...post, commentCount };
             })
@@ -262,8 +262,8 @@ export const searchPosts = async (req: AuthRequest, res: Response) => {
 
         res.json({
             posts: postsWithCounts,
-            hasMore: totalPosts > skip + posts.length,
-            keywordsUsed: searchKeywords
+            hasMore: totalPosts > skip + pagedPosts.length,
+            keywordsUsed: [query]
         });
 
     } catch (error) {

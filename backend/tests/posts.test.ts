@@ -4,7 +4,7 @@ import User from '../src/models/User';
 import Post from '../src/models/Post';
 import Comment from '../src/models/Comment';
 import jwt from 'jsonwebtoken';
-import ai from '../src/utils/gemini';
+import * as aiService from '../src/utils/aiService';
 
 const generateToken = (userId: string) => {
     return jwt.sign({ userId }, process.env.JWT_SECRET || 'fallback_secret', {
@@ -12,16 +12,18 @@ const generateToken = (userId: string) => {
     });
 };
 
-jest.mock('../src/utils/gemini', () => ({
-    __esModule: true,
-    default: {
-        models: {
-            generateContent: jest.fn().mockResolvedValue({
-                text: 'bench, barbell, heavy'
-            })
-        }
-    }
-}));
+jest.mock('../src/utils/aiService', () => {
+    const originalModule = jest.requireActual('../src/utils/aiService');
+    return {
+        __esModule: true,
+        ...originalModule,
+        generateEmbedding: jest.fn(async (text: string) => {
+            if (text === 'Heavy barbell bench press max PR') return [1, 1, 0];
+            if (text.includes('squat')) return [1, 0.9, 0];
+            return [0, 0, 1];
+        })
+    };
+});
 
 describe('Posts API', () => {
     let userToken: string;
@@ -223,15 +225,17 @@ describe('Posts API', () => {
                 author: testUser._id,
                 content: 'Heavy barbell bench press max PR',
                 likes: [],
+                embedding: [1, 1, 0]
             });
             await Post.create({
                 author: testUser._id,
                 content: 'I hate cardio day',
                 likes: [],
+                embedding: [0, 0, 1]
             });
         });
 
-        it('should search posts and use AI expansion', async () => {
+        it('should search posts and use AI vector match', async () => {
             const res = await request(app)
                 .get('/posts/search?q=squat')
                 .set('Cookie', [`accessToken=${userToken}`]);
@@ -240,8 +244,8 @@ describe('Posts API', () => {
             expect(res.body.posts.length).toBeGreaterThan(0);
             const contents = res.body.posts.map((p: any) => p.content);
             expect(contents).toContain('Heavy barbell bench press max PR');
-            expect(ai.models.generateContent).toHaveBeenCalled();
-            expect(res.body.keywordsUsed).toContain('bench');
+            expect(aiService.generateEmbedding).toHaveBeenCalled();
+            expect(res.body.keywordsUsed).toContain('squat');
         });
     });
 });
