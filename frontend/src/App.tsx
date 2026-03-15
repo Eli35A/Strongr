@@ -6,6 +6,8 @@ import Register from './pages/Register';
 import Profile from './pages/Profile';
 import Feed from './pages/Feed';
 import Search from './pages/Search';
+import LikedPosts from './pages/LikedPosts';
+import Goals from './pages/Goals';
 import { AuthContext } from './context/AuthContext';
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
@@ -45,17 +47,31 @@ function App() {
                     </MainLayout>
                 </ProtectedRoute>
             } />
-            <Route path="/profile" element={
-                <ProtectedRoute>
-                    <MainLayout>
-                        <Profile />
-                    </MainLayout>
-                </ProtectedRoute>
-            } />
             <Route path="/search" element={
                 <ProtectedRoute>
                     <MainLayout>
                         <Search />
+                    </MainLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/liked" element={
+                <ProtectedRoute>
+                    <MainLayout>
+                        <LikedPosts />
+                    </MainLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/goals" element={
+                <ProtectedRoute>
+                    <MainLayout>
+                        <Goals />
+                    </MainLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/profile" element={
+                <ProtectedRoute>
+                    <MainLayout>
+                        <Profile />
                     </MainLayout>
                 </ProtectedRoute>
             } />
