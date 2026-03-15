@@ -122,17 +122,46 @@ const PostCard: React.FC<PostCardProps> = ({ post, onPostUpdated, onPostDeleted 
                 subheader={<Typography variant="caption" color="text.secondary">{formatTimestamp(post.createdAt)}</Typography>}
             />
             <CardContent sx={{ pt: 0, pb: 1 }}>
-                <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', mb: post.image ? 2 : 0 }}>
+                <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', mb: (post.image || (post.images && post.images.length > 0)) ? 2 : 0 }}>
                     {post.content}
                 </Typography>
 
-                {post.image && (
+                {post.image && !post.images?.length && (
                     <Box sx={{ mt: 1, borderRadius: 2, overflow: 'hidden', bgcolor: 'background.default', display: 'flex', justifyContent: 'center' }}>
                         <img
                             src={`http://localhost:5000${post.image}`}
                             alt="Post content"
                             style={{ maxWidth: '100%', maxHeight: 500, objectFit: 'contain' }}
                         />
+                    </Box>
+                )}
+
+                {post.images && post.images.length > 0 && (
+                    <Box sx={{
+                        mt: 1,
+                        display: 'grid',
+                        gap: 0.5,
+                        gridTemplateColumns: post.images.length === 1 ? '1fr' : '1fr 1fr',
+                        borderRadius: 2,
+                        overflow: 'hidden',
+                        bgcolor: 'background.default'
+                    }}>
+                        {post.images.map((img: string, index: number) => (
+                            <Box
+                                key={index}
+                                sx={{
+                                    gridColumn: (post.images.length === 3 && index === 0) ? 'span 2' : 'span 1',
+                                    height: post.images.length === 1 ? 'auto' : 250,
+                                    overflow: 'hidden'
+                                }}
+                            >
+                                <img
+                                    src={`http://localhost:5000${img}`}
+                                    alt={`Post content ${index + 1}`}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                />
+                            </Box>
+                        ))}
                     </Box>
                 )}
             </CardContent>
@@ -216,7 +245,6 @@ const PostCard: React.FC<PostCardProps> = ({ post, onPostUpdated, onPostDeleted 
                 }}
             />
 
-            {/* Delete Confirmation Dialog */}
             {deleteOpen && (
                 <Box position="fixed" top={0} left={0} right={0} bottom={0} bgcolor="rgba(0,0,0,0.5)" display="flex" alignItems="center" justifyContent="center" zIndex={1300}>
                     <Card sx={{ p: 3, maxWidth: 400, width: '90%' }}>

@@ -8,16 +8,24 @@ export const createPost = async (req: AuthRequest, res: Response) => {
     try {
         const { content } = req.body;
 
-        if (!content) {
-            return res.status(400).json({ message: 'Content is required' });
+        const images: string[] = [];
+        if (req.files && Array.isArray(req.files)) {
+            (req.files as Express.Multer.File[]).forEach(file => {
+                images.push(`/uploads/${file.filename}`);
+            });
         }
 
-        const embedding = await generateEmbedding(content);
+        if (!content && images.length === 0) {
+            return res.status(400).json({ message: 'Content or images are required' });
+        }
+
+        const embedding = content ? await generateEmbedding(content) : [];
+
 
         const newPost = new Post({
             author: req.user?._id,
             content,
-            image: req.file ? `/uploads/${req.file.filename}` : undefined,
+            images,
             embedding
         });
 
@@ -109,14 +117,28 @@ export const updatePost = async (req: AuthRequest, res: Response) => {
         }
 
         const { content } = req.body;
-        if (content) {
+        if (content !== undefined) {
             post.content = content;
-            post.embedding = await generateEmbedding(content);
+            if (content) {
+                post.embedding = await generateEmbedding(content);
+            } else {
+                post.embedding = [];
+            }
         }
 
-        if (req.file) {
-            post.image = `/uploads/${req.file.filename}`;
+        let currentImages: string[] = [];
+        const { existingImages } = req.body;
+
+        if (existingImages) {
+            currentImages = Array.isArray(existingImages) ? existingImages : [existingImages];
         }
+
+        if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+            const newImages = (req.files as Express.Multer.File[]).map(file => `/uploads/${file.filename}`);
+            currentImages = [...currentImages, ...newImages];
+        }
+
+        post.images = currentImages;
 
         const updatedPost = await post.save();
         await updatedPost.populate('author', 'username profileImage');

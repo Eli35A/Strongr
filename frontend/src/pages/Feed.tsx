@@ -76,7 +76,7 @@ const Feed: React.FC = () => {
     };
 
     return (
-        <Container maxWidth="sm">
+        <Container maxWidth="md">
             <Box sx={{ mt: 2, mb: 4 }}>
                 <Box component="form" onSubmit={handleSearchSubmit} sx={{ mb: 3 }}>
                     <TextField
