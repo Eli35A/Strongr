@@ -8,6 +8,7 @@ import swaggerJsdoc from 'swagger-jsdoc';
 import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
 import postRoutes from './routes/postRoutes';
+import goalRoutes from './routes/goalRoutes';
 
 dotenv.config();
 
@@ -57,6 +58,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/auth', authRoutes);
 app.use('/users', userRoutes);
 app.use('/posts', postRoutes);
+app.use('/goals', goalRoutes);
 
 app.get('/', (req, res) => {
     res.send('Strongr API is running...');

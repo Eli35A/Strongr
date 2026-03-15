@@ -1,4 +1,6 @@
 import express from 'express';
+import multer from 'multer';
+import path from 'path';
 import {
     createPost,
     getPosts,
@@ -8,11 +10,10 @@ import {
     getPostComments,
     updatePost,
     deletePost,
-    searchPosts
+    searchPosts,
+    getLikedPosts
 } from '../controllers/postController';
 import { protect } from '../middleware/authMiddleware';
-import multer from 'multer';
-import path from 'path';
 
 const router = express.Router();
 
@@ -40,6 +41,22 @@ const upload = multer({
         }
     }
 });
+
+/**
+ * @swagger
+ * /posts/liked:
+ *   get:
+ *     summary: Get posts liked by the authenticated user
+ *     tags: [Posts]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: List of liked posts
+ *       401:
+ *         description: Not authorized
+ */
+router.get('/liked', protect, getLikedPosts);
 
 /**
  * @swagger
@@ -85,9 +102,11 @@ const upload = multer({
  *             properties:
  *               content:
  *                 type: string
- *               image:
- *                 type: string
- *                 format: binary
+ *               images:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
  *     responses:
  *       201:
  *         description: Post created successfully
@@ -158,9 +177,11 @@ router.get('/search', protect, searchPosts);
  *             properties:
  *               content:
  *                 type: string
- *               image:
- *                 type: string
- *                 format: binary
+ *               images:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
  *     responses:
  *       200:
  *         description: Post updated successfully
