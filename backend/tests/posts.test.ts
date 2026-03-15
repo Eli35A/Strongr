@@ -71,26 +71,40 @@ describe('Posts API', () => {
             expect(res.body.author.username).toBe('post_author');
         });
 
-        it('should upload an image when creating a post', async () => {
+        it('should upload images when creating a post', async () => {
             const buffer = Buffer.from('mock image');
             const res = await request(app)
                 .post('/posts')
                 .set('Cookie', [`accessToken=${userToken}`])
                 .field('content', 'Post with image')
-                .attach('image', buffer, 'post.png');
+                .attach('images', buffer, 'post.png');
 
             expect(res.status).toBe(201);
             expect(res.body.content).toBe('Post with image');
-            expect(res.body.image).toMatch(/^\/uploads\//);
+            expect(res.body.images).toHaveLength(1);
+            expect(res.body.images[0]).toMatch(/^\/uploads\//);
         });
 
-        it('should fail if no content provided', async () => {
+        it('should upload images without content', async () => {
+            const buffer = Buffer.from('mock image');
+            const res = await request(app)
+                .post('/posts')
+                .set('Cookie', [`accessToken=${userToken}`])
+                .attach('images', buffer, 'post.png');
+
+            expect(res.status).toBe(201);
+            expect(res.body.content).toBeUndefined();
+            expect(res.body.images).toHaveLength(1);
+        });
+
+        it('should fail if no content and no images provided', async () => {
             const res = await request(app)
                 .post('/posts')
                 .set('Cookie', [`accessToken=${userToken}`])
                 .send({});
 
             expect(res.status).toBe(400);
+            expect(res.body.message).toBe('Content or images are required');
         });
     });
 

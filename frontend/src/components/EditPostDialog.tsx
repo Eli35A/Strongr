@@ -23,8 +23,9 @@ interface EditPostDialogProps {
 
 const EditPostDialog: React.FC<EditPostDialogProps> = ({ open, onClose, post, onPostUpdated }) => {
     const [content, setContent] = useState('');
-    const [imageFile, setImageFile] = useState<File | null>(null);
-    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [existingImages, setExistingImages] = useState<string[]>([]);
+    const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
+    const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -32,31 +33,44 @@ const EditPostDialog: React.FC<EditPostDialogProps> = ({ open, onClose, post, on
     useEffect(() => {
         if (post && open) {
             setContent(post.content);
-            setImagePreview(post.image ? `http://localhost:5000${post.image}` : null);
-            setImageFile(null);
+            setExistingImages(post.images || (post.image ? [post.image] : []));
+            setNewImageFiles([]);
+            newImagePreviews.forEach(p => URL.revokeObjectURL(p));
+            setNewImagePreviews([]);
         }
     }, [post, open]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files.length > 0) {
-            const file = e.target.files[0];
-            setImageFile(file);
-            setImagePreview(URL.createObjectURL(file));
+        if (e.target.files) {
+            const files = Array.from(e.target.files);
+            const totalImages = existingImages.length + newImageFiles.length + files.length;
+
+            if (totalImages > 5) {
+                alert('Maximum 5 images allowed.');
+                return;
+            }
+
+            const previews = files.map(file => URL.createObjectURL(file));
+            setNewImageFiles(prev => [...prev, ...files]);
+            setNewImagePreviews(prev => [...prev, ...previews]);
         }
     };
 
-    const handleRemoveImage = () => {
-        setImageFile(null);
-        setImagePreview(null);
-        if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-        }
+    const handleRemoveExisting = (index: number) => {
+        setExistingImages(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const handleRemoveNew = (index: number) => {
+        const previewToRemove = newImagePreviews[index];
+        setNewImageFiles(prev => prev.filter((_, i) => i !== index));
+        setNewImagePreviews(prev => prev.filter((_, i) => i !== index));
+        URL.revokeObjectURL(previewToRemove);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!content.trim() && !imagePreview) return;
+        if (!content.trim() && existingImages.length === 0 && newImageFiles.length === 0) return;
 
         setLoading(true);
 
@@ -64,9 +78,13 @@ const EditPostDialog: React.FC<EditPostDialogProps> = ({ open, onClose, post, on
             const formData = new FormData();
             formData.append('content', content);
 
-            if (imageFile) {
-                formData.append('image', imageFile);
-            }
+            existingImages.forEach(img => {
+                formData.append('existingImages', img);
+            });
+
+            newImageFiles.forEach(file => {
+                formData.append('images', file);
+            });
 
             const { data: updatedPost } = await api.put(`/posts/${post._id}`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
@@ -99,16 +117,32 @@ const EditPostDialog: React.FC<EditPostDialogProps> = ({ open, onClose, post, on
                         sx={{ mb: 2 }}
                     />
 
-                    {imagePreview && (
-                        <Box sx={{ position: 'relative', mb: 2, borderRadius: 1, overflow: 'hidden', bgcolor: 'background.default', display: 'flex', justifyContent: 'center' }}>
-                            <img src={imagePreview} alt="Preview" style={{ maxWidth: '100%', maxHeight: 300, objectFit: 'contain' }} />
-                            <IconButton
-                                size="small"
-                                sx={{ position: 'absolute', top: 8, right: 8, bgcolor: 'rgba(0,0,0,0.5)', color: 'white', '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' } }}
-                                onClick={handleRemoveImage}
-                            >
-                                <CloseIcon fontSize="small" />
-                            </IconButton>
+                    {(existingImages.length > 0 || newImagePreviews.length > 0) && (
+                        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mb: 2 }}>
+                            {existingImages.map((img, index) => (
+                                <Box key={`existing-${index}`} sx={{ position: 'relative', borderRadius: 1, overflow: 'hidden', height: 150 }}>
+                                    <img src={`http://localhost:5000${img}`} alt="Existing" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    <IconButton
+                                        size="small"
+                                        sx={{ position: 'absolute', top: 4, right: 4, bgcolor: 'rgba(0,0,0,0.5)', color: 'white', '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' } }}
+                                        onClick={() => handleRemoveExisting(index)}
+                                    >
+                                        <CloseIcon fontSize="small" />
+                                    </IconButton>
+                                </Box>
+                            ))}
+                            {newImagePreviews.map((preview, index) => (
+                                <Box key={`new-${index}`} sx={{ position: 'relative', borderRadius: 1, overflow: 'hidden', height: 150 }}>
+                                    <img src={preview} alt="New Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    <IconButton
+                                        size="small"
+                                        sx={{ position: 'absolute', top: 4, right: 4, bgcolor: 'rgba(0,0,0,0.5)', color: 'white', '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' } }}
+                                        onClick={() => handleRemoveNew(index)}
+                                    >
+                                        <CloseIcon fontSize="small" />
+                                    </IconButton>
+                                </Box>
+                            ))}
                         </Box>
                     )}
 
@@ -116,13 +150,14 @@ const EditPostDialog: React.FC<EditPostDialogProps> = ({ open, onClose, post, on
                         startIcon={<PhotoCameraIcon />}
                         component="label"
                         sx={{ textTransform: 'none', color: 'text.secondary' }}
-                        disabled={loading}
+                        disabled={loading || (existingImages.length + newImageFiles.length >= 5)}
                     >
-                        {imagePreview ? 'Change Photo' : 'Add Photo'}
+                        Add Photo ({existingImages.length + newImageFiles.length}/5)
                         <input
                             type="file"
                             hidden
                             accept="image/*"
+                            multiple
                             onChange={handleFileChange}
                             ref={fileInputRef}
                         />
@@ -133,7 +168,7 @@ const EditPostDialog: React.FC<EditPostDialogProps> = ({ open, onClose, post, on
                     <Button
                         type="submit"
                         variant="contained"
-                        disabled={loading || (!content.trim() && !imagePreview)}
+                        disabled={loading || (!content.trim() && existingImages.length === 0 && newImageFiles.length === 0)}
                     >
                         {loading ? <CircularProgress size={24} color="inherit" /> : 'Save Changes'}
                     </Button>

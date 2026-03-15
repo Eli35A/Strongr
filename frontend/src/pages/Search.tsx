@@ -21,7 +21,7 @@ const Search: React.FC = () => {
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
-    const [keywordsUsed, setKeywordsUsed] = useState<string[]>([]);
+
 
     const observer = useRef<IntersectionObserver | null>(null);
     const lastPostElementRef = useCallback((node: HTMLDivElement | null) => {
@@ -40,7 +40,7 @@ const Search: React.FC = () => {
             setLoading(false);
             setPosts([]);
             setHasMore(false);
-            setKeywordsUsed([]);
+
             return;
         }
 
@@ -62,9 +62,7 @@ const Search: React.FC = () => {
             }
 
             setHasMore(data.hasMore);
-            if (data.keywordsUsed) {
-                setKeywordsUsed(data.keywordsUsed);
-            }
+
         } catch (error) {
             console.error('Error fetching search results:', error);
         } finally {
@@ -106,7 +104,7 @@ const Search: React.FC = () => {
     };
 
     return (
-        <Container maxWidth="sm">
+        <Container maxWidth="md">
             <Box sx={{ mt: 2, mb: 4 }}>
                 <Box display="flex" alignItems="center" mb={3} gap={1}>
                     <IconButton onClick={() => navigate('/')} sx={{ bgcolor: 'background.paper' }}>
@@ -115,7 +113,7 @@ const Search: React.FC = () => {
                     <Box component="form" onSubmit={handleSearchSubmit} sx={{ flexGrow: 1 }}>
                         <TextField
                             fullWidth
-                            placeholder="Smart Search (e.g., 'leg day')"
+                            placeholder="Search posts..."
                             variant="outlined"
                             value={searchInput}
                             onChange={(e) => setSearchInput(e.target.value)}
@@ -138,15 +136,21 @@ const Search: React.FC = () => {
                     </Box>
                 </Box>
 
-                {!loading && keywordsUsed.length > 0 && (
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2, ml: 1 }}>
-                        <strong>AI Search Keywords used:</strong> {keywordsUsed.join(', ')}
-                    </Typography>
-                )}
+
 
                 {loading ? (
                     <Box display="flex" justifyContent="center" mt={4}>
                         <CircularProgress />
+                    </Box>
+                ) : !query.trim() ? (
+                    <Box display="flex" flexDirection="column" alignItems="center" mt={6}>
+                        <SearchIcon sx={{ fontSize: 60, color: 'text.disabled', mb: 2 }} />
+                        <Typography variant="h6" color="text.secondary" textAlign="center">
+                            Search for posts
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" textAlign="center" mt={1}>
+                            Type something above to find interesting content.
+                        </Typography>
                     </Box>
                 ) : posts.length === 0 ? (
                     <Box display="flex" flexDirection="column" alignItems="center" mt={6}>

@@ -98,7 +98,7 @@ const upload = multer({
  */
 router.route('/')
     .get(protect, getPosts)
-    .post(protect, upload.single('image'), createPost);
+    .post(protect, upload.array('images', 5), createPost);
 
 /**
  * @swagger
@@ -192,7 +192,7 @@ router.get('/search', protect, searchPosts);
  *         description: Post not found
  */
 router.route('/:id')
-    .put(protect, upload.single('image'), updatePost)
+    .put(protect, upload.array('images', 5), updatePost)
     .delete(protect, deletePost);
 
 /**
