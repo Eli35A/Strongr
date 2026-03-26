@@ -60,8 +60,11 @@ app.use('/users', userRoutes);
 app.use('/posts', postRoutes);
 app.use('/goals', goalRoutes);
 
-app.get('/', (req, res) => {
-    res.send('Strongr API is running...');
+const frontendDistPath = path.join(__dirname, '../../frontend/dist');
+app.use(express.static(frontendDistPath));
+
+app.get('*', (req, res) => {
+    res.sendFile(path.join(frontendDistPath, 'index.html'));
 });
 
 export default app;
