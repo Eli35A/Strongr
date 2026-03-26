@@ -15,6 +15,8 @@ import {
 import HomeIcon from '@mui/icons-material/Home';
 import SearchIcon from '@mui/icons-material/Search';
 import PersonIcon from '@mui/icons-material/Person';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import AssignmentIcon from '@mui/icons-material/Assignment';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { AuthContext } from '../context/AuthContext';
 
@@ -26,6 +28,8 @@ const Sidebar: React.FC = () => {
     const menuItems = [
         { text: 'Home', icon: <HomeIcon />, path: '/' },
         { text: 'Search', icon: <SearchIcon />, path: '/search' },
+        { text: 'Liked Posts', icon: <FavoriteIcon />, path: '/liked' },
+        { text: 'Goals', icon: <AssignmentIcon />, path: '/goals' },
         { text: 'Profile', icon: <PersonIcon />, path: '/profile' },
     ];
 

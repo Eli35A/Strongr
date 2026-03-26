@@ -104,6 +104,39 @@ export const getUserPosts = async (req: AuthRequest, res: Response) => {
     }
 };
 
+export const getLikedPosts = async (req: AuthRequest, res: Response) => {
+    try {
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
+        const skip = (page - 1) * limit;
+
+        const userId = req.user?._id;
+        const totalPosts = await Post.countDocuments({ likes: userId });
+
+        const posts = await Post.find({ likes: userId })
+            .populate('author', 'username profileImage')
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .lean();
+
+        const postsWithCounts = await Promise.all(
+            posts.map(async (post) => {
+                const commentCount = await Comment.countDocuments({ post: post._id });
+                return { ...post, commentCount };
+            })
+        );
+
+        res.json({
+            posts: postsWithCounts,
+            hasMore: totalPosts > skip + posts.length
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error fetching liked posts' });
+    }
+};
+
 export const updatePost = async (req: AuthRequest, res: Response) => {
     try {
         const post = await Post.findById(req.params.id);
