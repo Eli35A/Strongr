@@ -9,7 +9,9 @@
         "build": "tsc",
         "test": "jest",
         "lint": "eslint .",
-        "format": "prettier --write ."
+        "format": "prettier --write .",
+        "prod": "cp .envprod .env && tsc -p tsconfig_prod.json && pm2 restart ecosystem.config.js --env production",
+        "prod1": "cp .envprod .env && tsc -p tsconfig_prod.json && node ./dist/server.js"
     },
     "dependencies": {
         "@google/genai": "latest",
