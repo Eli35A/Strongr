@@ -39,7 +39,6 @@ const CreatePostWidget: React.FC<CreatePostWidgetProps> = ({ onPostCreated }) =>
     };
 
     const handleRemoveImage = (index: number) => {
-        const fileToRemove = imageFiles[index];
         const previewToRemove = imagePreviews[index];
 
         setImageFiles(prev => prev.filter((_, i) => i !== index));
