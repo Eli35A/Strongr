@@ -2,10 +2,13 @@ node_modules/
 dist/
 build/
 
+
+*.csr
 # env files
 .env
 .env.*
 !.env.example
+.env*
 
 # logs
 *.log
