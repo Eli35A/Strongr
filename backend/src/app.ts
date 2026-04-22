@@ -32,8 +32,8 @@ const swaggerOptions = {
         },
         servers: [
             {
-                url: 'http://localhost:5000',
-                description: 'Local development server',
+                url: 'https://node103.cs.colman.ac.il',
+                description: 'Server',
             },
         ],
         components: {
@@ -47,7 +47,7 @@ const swaggerOptions = {
         },
         security: [{ cookieAuth: [] }],
     },
-    apis: [path.join(__dirname, './routes/*.ts')],
+    apis: [path.join(__dirname, './routes/*.js'), path.join(__dirname, './routes/*.ts')],
 };
 
 const swaggerDocs = swaggerJsdoc(swaggerOptions);

@@ -34,7 +34,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onPostUpdated, onPostDeleted 
         if (!user || !user.profileImage) return undefined;
         return user.profileImage.startsWith('http')
             ? user.profileImage
-            : (user.profileImage !== 'default-profile.png' ? `http://localhost:5000${user.profileImage}` : undefined);
+            : (user.profileImage !== 'default-profile.png' ? `${import.meta.env.VITE_SERVER_URL}${user.profileImage}` : undefined);
     };
 
     const handleLikeToggle = async () => {
@@ -129,7 +129,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onPostUpdated, onPostDeleted 
                 {post.image && !post.images?.length && (
                     <Box sx={{ mt: 1, borderRadius: 2, overflow: 'hidden', bgcolor: 'background.default', display: 'flex', justifyContent: 'center' }}>
                         <img
-                            src={`http://localhost:5000${post.image}`}
+                            src={`${import.meta.env.VITE_SERVER_URL}${post.image}`}
                             alt="Post content"
                             style={{ maxWidth: '100%', maxHeight: 500, objectFit: 'contain' }}
                         />
@@ -156,7 +156,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onPostUpdated, onPostDeleted 
                                 }}
                             >
                                 <img
-                                    src={`http://localhost:5000${img}`}
+                                    src={`${import.meta.env.VITE_SERVER_URL}${img}`}
                                     alt={`Post content ${index + 1}`}
                                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                 />

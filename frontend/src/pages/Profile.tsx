@@ -107,7 +107,7 @@ const Profile: React.FC = () => {
 
     const avatarUrl = profile.profileImage?.startsWith('http')
         ? profile.profileImage
-        : (profile.profileImage !== 'default-profile.png' ? `http://localhost:5000${profile.profileImage}` : undefined);
+        : (profile.profileImage !== 'default-profile.png' ? `${import.meta.env.VITE_SERVER_URL}${profile.profileImage}` : undefined);
 
     return (
         <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>

@@ -35,7 +35,7 @@ const EditProfileDialog: React.FC<EditProfileDialogProps> = ({ open, onClose, us
             setEmail(user.email);
             setAvatarPreview(user.profileImage?.startsWith('http')
                 ? user.profileImage
-                : (user.profileImage !== 'default-profile.png' ? `http://localhost:5000${user.profileImage}` : null));
+                : (user.profileImage !== 'default-profile.png' ? `${import.meta.env.VITE_SERVER_URL}${user.profileImage}` : null));
             setAvatarFile(null);
         }
     }, [user, open]);

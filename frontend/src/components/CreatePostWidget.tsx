@@ -20,7 +20,7 @@ const CreatePostWidget: React.FC<CreatePostWidgetProps> = ({ onPostCreated }) =>
 
     const avatarUrl = auth?.user?.profileImage?.startsWith('http')
         ? auth.user.profileImage
-        : (auth?.user?.profileImage !== 'default-profile.png' ? `http://localhost:5000${auth?.user?.profileImage}` : undefined);
+        : (auth?.user?.profileImage !== 'default-profile.png' ? `${import.meta.env.VITE_SERVER_URL}${auth?.user?.profileImage}` : undefined);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {

@@ -35,7 +35,7 @@ const Sidebar: React.FC = () => {
 
     const avatarUrl = auth?.user?.profileImage?.startsWith('http')
         ? auth.user.profileImage
-        : (auth?.user?.profileImage !== 'default-profile.png' ? `http://localhost:5000${auth?.user?.profileImage}` : undefined);
+        : (auth?.user?.profileImage !== 'default-profile.png' ? `${import.meta.env.VITE_SERVER_URL}${auth?.user?.profileImage}` : undefined);
 
     if (!auth?.user) return null;
 

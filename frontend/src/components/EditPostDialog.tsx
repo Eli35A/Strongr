@@ -121,7 +121,7 @@ const EditPostDialog: React.FC<EditPostDialogProps> = ({ open, onClose, post, on
                         <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mb: 2 }}>
                             {existingImages.map((img, index) => (
                                 <Box key={`existing-${index}`} sx={{ position: 'relative', borderRadius: 1, overflow: 'hidden', height: 150 }}>
-                                    <img src={`http://localhost:5000${img}`} alt="Existing" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    <img src={`${import.meta.env.VITE_SERVER_URL}${img}`} alt="Existing" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                     <IconButton
                                         size="small"
                                         sx={{ position: 'absolute', top: 4, right: 4, bgcolor: 'rgba(0,0,0,0.5)', color: 'white', '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' } }}
