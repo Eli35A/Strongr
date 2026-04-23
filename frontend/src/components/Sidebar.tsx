@@ -46,61 +46,113 @@ const Sidebar: React.FC = () => {
             position: 'fixed',
             left: 0,
             top: 0,
-            borderRight: 1,
-            borderColor: 'divider',
+            borderRight: '1px solid rgba(255, 255, 255, 0.06)',
             display: 'flex',
             flexDirection: 'column',
             bgcolor: 'background.paper',
-            zIndex: 1200
+            zIndex: 1200,
         }}>
-            <Box sx={{ p: 3 }}>
+            {/* Logo */}
+            <Box sx={{ p: 3, pb: 2 }}>
                 <Typography
-                    variant="h5"
-                    fontWeight="bold"
-                    color="primary"
-                    sx={{ cursor: 'pointer', letterSpacing: 1 }}
                     onClick={() => navigate('/')}
+                    sx={{
+                        cursor: 'pointer',
+                        fontFamily: '"Barlow Condensed", sans-serif',
+                        fontWeight: 700,
+                        fontSize: '1.75rem',
+                        letterSpacing: 2,
+                        background: 'linear-gradient(135deg, #FF5A5F 0%, #FF8A8E 100%)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text',
+                        userSelect: 'none',
+                    }}
                 >
-                    Strongr
+                    STRONGR
+                </Typography>
+                <Typography variant="caption" sx={{ color: 'text.secondary', letterSpacing: 1, fontSize: '0.65rem' }}>
+                    YOUR FITNESS COMMUNITY
                 </Typography>
             </Box>
 
-            <List sx={{ flexGrow: 1, px: 2 }}>
-                {menuItems.map((item) => (
-                    <ListItem key={item.text} disablePadding sx={{ mb: 1 }}>
-                        <ListItemButton
-                            onClick={() => navigate(item.path)}
-                            selected={location.pathname === item.path}
-                            sx={{
-                                borderRadius: 2,
-                                '&.Mui-selected': {
-                                    bgcolor: 'primary.light',
-                                    color: 'primary.main',
-                                    '& .MuiListItemIcon-root': { color: 'primary.main' },
-                                    '&:hover': { bgcolor: 'primary.light' }
-                                },
-                                '&:hover': { bgcolor: 'action.hover' }
-                            }}
-                        >
-                            <ListItemIcon sx={{ minWidth: 40, color: location.pathname === item.path ? 'primary.main' : 'inherit' }}>
-                                {item.icon}
-                            </ListItemIcon>
-                            <ListItemText primary={item.text} primaryTypographyProps={{ fontWeight: location.pathname === item.path ? 'bold' : 'medium' }} />
-                        </ListItemButton>
-                    </ListItem>
-                ))}
+            <Divider />
+
+            <List sx={{ flexGrow: 1, px: 2, pt: 2 }}>
+                {menuItems.map((item) => {
+                    const isActive = location.pathname === item.path;
+                    return (
+                        <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
+                            <ListItemButton
+                                onClick={() => navigate(item.path)}
+                                selected={isActive}
+                                sx={{
+                                    borderRadius: 2,
+                                    transition: 'all 0.15s ease',
+                                    position: 'relative',
+                                    '&.Mui-selected': {
+                                        bgcolor: 'rgba(255, 90, 95, 0.10)',
+                                        color: 'primary.main',
+                                        '& .MuiListItemIcon-root': { color: 'primary.main' },
+                                        '& .MuiListItemText-primary': { fontWeight: 700, color: 'primary.main' },
+                                        '&:hover': { bgcolor: 'rgba(255, 90, 95, 0.15)' },
+                                        '&::before': {
+                                            content: '""',
+                                            position: 'absolute',
+                                            left: 0,
+                                            top: '20%',
+                                            bottom: '20%',
+                                            width: '3px',
+                                            borderRadius: '0 3px 3px 0',
+                                            bgcolor: 'primary.main',
+                                        },
+                                    },
+                                    '&:hover': {
+                                        bgcolor: 'rgba(255, 255, 255, 0.05)',
+                                        transform: 'translateX(2px)',
+                                    },
+                                }}
+                            >
+                                <ListItemIcon sx={{
+                                    minWidth: 40,
+                                    color: isActive ? 'primary.main' : 'text.secondary',
+                                    transition: 'color 0.15s ease',
+                                }}>
+                                    {item.icon}
+                                </ListItemIcon>
+                                <ListItemText
+                                    primary={item.text}
+                                    primaryTypographyProps={{
+                                        fontWeight: isActive ? 700 : 400,
+                                        fontSize: '0.95rem',
+                                    }}
+                                />
+                            </ListItemButton>
+                        </ListItem>
+                    );
+                })}
             </List>
 
             <Divider />
 
+            {/* User section */}
             <Box sx={{ p: 2 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, p: 1 }}>
-                    <Avatar src={avatarUrl} alt={auth.user.username} sx={{ width: 40, height: 40 }} />
-                    <Box sx={{ overflow: 'hidden' }}>
+                <Box sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1.5,
+                    mb: 1.5,
+                    p: 1.5,
+                    borderRadius: 2,
+                    bgcolor: 'rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(255,255,255,0.06)',
+                }}>
+                    <Avatar src={avatarUrl} alt={auth.user.username} sx={{ width: 38, height: 38 }} />
+                    <Box sx={{ overflow: 'hidden', flex: 1 }}>
                         <Typography variant="subtitle2" fontWeight="bold" noWrap>
                             {auth.user.username}
                         </Typography>
-                        <Typography variant="caption" color="text.secondary" noWrap>
+                        <Typography variant="caption" color="text.secondary" noWrap sx={{ fontSize: '0.7rem' }}>
                             {auth.user.email}
                         </Typography>
                     </Box>
@@ -109,9 +161,22 @@ const Sidebar: React.FC = () => {
                     fullWidth
                     variant="outlined"
                     color="inherit"
-                    startIcon={<LogoutIcon />}
+                    startIcon={<LogoutIcon fontSize="small" />}
                     onClick={auth.logout}
-                    sx={{ borderRadius: 2, textTransform: 'none' }}
+                    sx={{
+                        borderRadius: 2,
+                        textTransform: 'none',
+                        borderColor: 'rgba(255,255,255,0.12)',
+                        color: 'text.secondary',
+                        fontSize: '0.85rem',
+                        py: 0.75,
+                        '&:hover': {
+                            borderColor: 'error.main',
+                            color: 'error.main',
+                            bgcolor: 'rgba(211, 47, 47, 0.08)',
+                        },
+                        transition: 'all 0.2s ease',
+                    }}
                 >
                     Logout
                 </Button>

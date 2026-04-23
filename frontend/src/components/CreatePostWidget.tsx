@@ -121,7 +121,7 @@ const CreatePostWidget: React.FC<CreatePostWidgetProps> = ({ onPostCreated }) =>
                     </Box>
                 )}
 
-                <Box display="flex" justifyContent="space-between" alignItems="center" mt={2} pt={2} borderTop="1px solid #eee">
+                <Box display="flex" justifyContent="space-between" alignItems="center" mt={2} pt={2} sx={{ borderTop: '1px solid', borderColor: 'divider' }}>
                     <Button
                         startIcon={<PhotoCameraIcon />}
                         component="label"

@@ -103,7 +103,16 @@ const PostCard: React.FC<PostCardProps> = ({ post, onPostUpdated, onPostDeleted 
     };
 
     return (
-        <Card sx={{ mb: 3, borderRadius: 2, boxShadow: 1 }}>
+        <Card sx={{
+            mb: 3,
+            borderRadius: 2,
+            boxShadow: 1,
+            transition: 'box-shadow 0.2s ease, transform 0.2s ease',
+            '&:hover': {
+                boxShadow: '0 6px 24px rgba(0,0,0,0.5)',
+                transform: 'translateY(-2px)',
+            },
+        }}>
             <CardHeader
                 avatar={<Avatar src={getAvatarUrl(post.author)} alt={post.author?.username} />}
                 action={
@@ -131,7 +140,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onPostUpdated, onPostDeleted 
                         <img
                             src={`${import.meta.env.VITE_SERVER_URL}${post.image}`}
                             alt="Post content"
-                            style={{ maxWidth: '100%', maxHeight: 500, objectFit: 'contain' }}
+                            style={{ maxWidth: '100%', maxHeight: 340, objectFit: 'contain' }}
                         />
                     </Box>
                 )}
@@ -151,14 +160,16 @@ const PostCard: React.FC<PostCardProps> = ({ post, onPostUpdated, onPostDeleted 
                                 key={index}
                                 sx={{
                                     gridColumn: (post.images.length === 3 && index === 0) ? 'span 2' : 'span 1',
-                                    height: post.images.length === 1 ? 'auto' : 250,
-                                    overflow: 'hidden'
+                                    overflow: 'hidden',
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    maxHeight: post.images.length === 1 ? 340 : 220,
                                 }}
                             >
                                 <img
                                     src={`${import.meta.env.VITE_SERVER_URL}${img}`}
                                     alt={`Post content ${index + 1}`}
-                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
                                 />
                             </Box>
                         ))}
@@ -168,7 +179,14 @@ const PostCard: React.FC<PostCardProps> = ({ post, onPostUpdated, onPostDeleted 
 
             <CardActions disableSpacing sx={{ px: 2, display: 'flex', gap: 1 }}>
                 <Box display="flex" alignItems="center">
-                    <IconButton onClick={handleLikeToggle} color={isLikedByMe ? "error" : "default"}>
+                    <IconButton
+                        onClick={handleLikeToggle}
+                        color={isLikedByMe ? "error" : "default"}
+                        sx={{
+                            transition: 'all 0.15s ease',
+                            '&:active': { transform: 'scale(0.82)' },
+                        }}
+                    >
                         {isLikedByMe ? <FavoriteIcon /> : <FavoriteBorderIcon />}
                     </IconButton>
                     <Typography variant="body2" color="text.secondary">{likes.length}</Typography>
